@@ -186,7 +186,7 @@
   <section class="page" id="page-settings">
     <div class="hint">✅ 勾选即保存,数据只存在本机浏览器 · 建议每天睡前检查是否全部完成</div>
     <div class="card" style="margin-top:12px;">
-      <div style="font-weight:700; margin-bottom:6px;">⚙️ 使用说明</div>
+      <div style="font-weight:700; margin-bottom:6px;">⚙️ 使用说明 & 备份</div>
       <div style="font-size:13px; color:#555; line-height:1.7;">
         ① 每天完成一项就勾选,全部勾完=当日打卡完成。<br>
         ② 周五六为休息日,自动视为完成,不打断连续打卡。<br>
@@ -194,9 +194,15 @@
         ④ 番茄钟完成自动记入学习时长;例题先做再点「查看答案」。
       </div>
       <div style="display:flex; gap:8px; margin-top:12px;">
-        <button class="btn-primary" style="flex:1;padding:11px;border:none;border-radius:12px;font-weight:600;" onclick="openBackup()">备份进度</button>
-        <button class="btn-back" style="flex:1;padding:11px;border-radius:12px;font-weight:600;border:1px solid #e5e7eb;" onclick="openRestore()">恢复进度</button>
+        <button class="btn-primary" style="flex:1;padding:10px;border:none;border-radius:12px;font-weight:600;font-size:13px;" onclick="downloadBackup()">⬇️ 下载</button>
+        <button class="btn-back" style="flex:1;padding:10px;border-radius:12px;font-weight:600;font-size:13px;border:1px solid #e5e7eb;" onclick="openBackup()">📋 复制</button>
+        <button class="btn-back" style="flex:1;padding:10px;border-radius:12px;font-weight:600;font-size:13px;border:1px solid #e5e7eb;" onclick="openRestore()">⬆️ 恢复</button>
       </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:13px;color:#555;background:#f8fafc;border-radius:10px;padding:10px 12px;">
+        <span>🔁 自动备份(每3天自动下载)</span>
+        <input type="checkbox" id="autoBackupChk" checked style="width:18px;height:18px;" onchange="toggleAutoBackup(this)">
+      </div>
+      <div id="backupInfo" style="font-size:12px;color:var(--muted);margin-top:8px;"></div>
     </div>
   </section>
 
@@ -478,13 +484,52 @@ function switchTab(name){
   document.querySelectorAll('.tabbar .tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
 }
 
-// 备份 / 恢复
+// ===== 备份 / 恢复 / 自动备份 =====
+const LAST_BACKUP_KEY='kaoyan-lastbackup';
+const AUTO_BACKUP_KEY='kaoyan-autobackup';
+let lastBackup=loadLastBackup();
+let autoBackup=loadAutoBackup();
+function loadLastBackup(){try{return parseInt(localStorage.getItem(LAST_BACKUP_KEY),10)||0;}catch(e){return 0;}}
+function saveLastBackup(){try{localStorage.setItem(LAST_BACKUP_KEY,String(lastBackup));}catch(e){}}
+function loadAutoBackup(){try{const v=localStorage.getItem(AUTO_BACKUP_KEY);return v===null?true:v==='1';}catch(e){return true;}}
+function saveAutoBackup(){try{localStorage.setItem(AUTO_BACKUP_KEY,autoBackup?'1':'0');}catch(e){}}
+function backupData(){
+  return {v:2, store:store, study:studyStore, review:reviewStore, news:news, timer:{focus:focusMinVal, brk:breakMinVal}};
+}
+function restoreData(d){
+  if(d.store)store=d.store;
+  if(d.study)studyStore=d.study;
+  if(d.review)reviewStore=d.review;
+  if(Array.isArray(d.news))news=d.news;
+  if(d.timer){focusMinVal=d.timer.focus||25;breakMinVal=d.timer.brk||5;focusMs=focusMinVal*60000;breakMs=breakMinVal*60000;try{localStorage.setItem(TIMER_KEY,JSON.stringify({focus:focusMinVal,brk:breakMinVal}));}catch(e){}}
+  save();saveStudy();saveReviewStore();saveNews();
+}
+function downloadBackup(){
+  const blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='kaoyan-backup-'+toKey(new Date())+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  lastBackup=Date.now();saveLastBackup();renderBackupInfo();
+}
+function renderBackupInfo(){
+  const el=document.getElementById('backupInfo');
+  if(!el)return;
+  const days=lastBackup?Math.floor((Date.now()-lastBackup)/86400000):99;
+  el.textContent='上次备份：'+(lastBackup?(days===0?'今天':days+' 天前'):'从未');
+}
+function toggleAutoBackup(cb){autoBackup=cb.checked;saveAutoBackup();}
+function autoBackupCheck(){
+  const days=lastBackup?Math.floor((Date.now()-lastBackup)/86400000):99;
+  const hasData=(Object.keys(store).length>0)||(Object.keys(studyStore).length>0);
+  if(autoBackup&&days>=3&&hasData)downloadBackup();
+}
 let modalMode='backup';
 function openBackup(){
   modalMode='backup';
   document.getElementById('modalTitle').textContent='数据备份';
-  document.getElementById('modalDesc').textContent='复制下面这段文字，存到备忘录或发给文件传输助手，即可备份进度。';
-  document.getElementById('modalText').value=JSON.stringify(store);
+  document.getElementById('modalDesc').textContent='复制下面这段文字，存到备忘录或发给文件传输助手，即可备份全部进度。';
+  document.getElementById('modalText').value=JSON.stringify(backupData());
   document.getElementById('modalOk').textContent='复制';
   document.getElementById('modal').classList.add('show');
 }
@@ -502,9 +547,10 @@ function modalOk(){
     const ta=document.getElementById('modalText'); ta.select();
     if(navigator.clipboard){navigator.clipboard.writeText(txt).then(()=>{}).catch(()=>{});}
     document.execCommand('copy');
+    lastBackup=Date.now();saveLastBackup();renderBackupInfo();
     document.getElementById('modalDesc').textContent='已复制(如未成功请长按手动复制)';
   }else{
-    try{store=JSON.parse(txt);save();renderAll();closeModal();}catch(e){alert('格式不对,恢复失败');}
+    try{const d=JSON.parse(txt);restoreData(d);renderAll();initReview();renderBackupInfo();closeModal();}catch(e){alert('格式不对,恢复失败');}
   }
 }
 function closeModal(){document.getElementById('modal').classList.remove('show');}
@@ -873,6 +919,8 @@ function saveReview(){
 renderAll();
 renderTimer();
 initReview();
+renderBackupInfo();
+autoBackupCheck();
 </script>
 
 <div class="wrap" style="margin-top:16px;">
