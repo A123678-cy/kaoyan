@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>考研每日打卡 · 东南大学085409</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --text:#1a1a2e; --muted:#8a8f98;
+    --accent:#2563eb; --accent-soft:#dbeafe; --green:#16a34a; --green-soft:#dcfce7;
+    --amber:#d97706; --amber-soft:#fef3c7; --line:#e5e7eb; --red:#dc2626;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    padding-bottom:90px; font-size:15px; line-height:1.5;}
+  .wrap{max-width:560px; margin:0 auto; padding:12px 14px;}
+
+  header{background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff;
+    padding:18px 16px 16px; border-radius:0 0 18px 18px;}
+  header h1{margin:0; font-size:19px; font-weight:700;}
+  header .sub{margin-top:4px; font-size:12px; opacity:.85;}
+  .date-line{margin-top:10px; font-size:13px; opacity:.9;}
+
+  .stats{display:flex; gap:10px; margin:14px 0;}
+  .stat{flex:1; background:var(--card); border-radius:14px; padding:12px 10px; text-align:center;
+    box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .stat .num{font-size:22px; font-weight:800; color:var(--accent);}
+  .stat.g .num{color:var(--green);}
+  .stat .lbl{font-size:11px; color:var(--muted); margin-top:2px;}
+
+  .bar{height:8px; background:#e5e7eb; border-radius:99px; overflow:hidden; margin:4px 0 14px;}
+  .bar>i{display:block; height:100%; background:var(--green); border-radius:99px; transition:width .3s;}
+
+  .card{background:var(--card); border-radius:14px; padding:14px; margin-bottom:12px;
+    box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .phase-pill{display:inline-block; font-size:11px; font-weight:600; padding:3px 10px;
+    border-radius:99px; background:var(--accent-soft); color:var(--accent); margin-bottom:8px;}
+
+  .task{display:flex; align-items:flex-start; gap:10px; padding:11px 4px; border-bottom:1px solid var(--line);}
+  .task:last-child{border-bottom:none;}
+  .task input{width:22px; height:22px; margin-top:1px; flex:none; accent-color:var(--green);}
+  .task .t{flex:1;}
+  .task.done .t{color:var(--muted); text-decoration:line-through;}
+
+  .week{display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:12px;}
+  .wd{background:var(--card); border-radius:10px; padding:7px 0; text-align:center;
+    box-shadow:0 1px 2px rgba(0,0,0,.04); cursor:pointer; border:2px solid transparent;}
+  .wd .d{font-size:14px; font-weight:700;}
+  .wd .w{font-size:10px; color:var(--muted);}
+  .wd.today{border-color:var(--accent);}
+  .wd.full{background:var(--green-soft);}
+  .wd.part{background:var(--amber-soft);}
+  .wd .dot{width:7px;height:7px;border-radius:50%;margin:4px auto 0;background:#e5e7eb;}
+  .wd.full .dot{background:var(--green);}
+  .wd.part .dot{background:var(--amber);}
+
+  .focus{background:var(--accent-soft); border-radius:12px; padding:10px 12px; margin-bottom:8px;
+    font-size:13px; color:#1e3a8a; font-weight:600; line-height:1.6;}
+
+  .milestone{background:var(--amber-soft); border:1px solid #fde68a; border-radius:12px;
+    padding:10px 12px; margin-bottom:12px; font-size:13px; color:#92400e;}
+  .milestone b{display:block;}
+
+  .nav{position:fixed; left:0; right:0; bottom:0; background:var(--card);
+    border-top:1px solid var(--line); display:flex; gap:8px; padding:10px 14px; justify-content:center;}
+  .nav button{flex:1; max-width:180px; padding:11px; border:none; border-radius:12px;
+    font-size:14px; font-weight:600; cursor:pointer;}
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-ghost{background:#eef2f7; color:var(--text);}
+  .btn-back{background:#fff; color:var(--text); border:1px solid var(--line)!important;}
+
+  .hint{font-size:11px; color:var(--muted); text-align:center; margin:8px 0 0;}
+  .modal{position:fixed; inset:0; background:rgba(0,0,0,.4); display:none; align-items:center; justify-content:center; padding:20px;}
+  .modal.show{display:flex;}
+  .modal .box{background:#fff; border-radius:16px; padding:16px; width:100%; max-width:480px;}
+  .modal textarea{width:100%; height:160px; border:1px solid var(--line); border-radius:10px;
+    padding:10px; font-size:12px; font-family:monospace; margin:8px 0;}
+  .modal h3{margin:0 0 4px; font-size:16px;}
+  .modal .row{display:flex; gap:8px;}
+  .modal .row button{flex:1; padding:11px; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer;}
+</style>
+</head>
+<body>
+<header>
+  <h1>考研每日打卡</h1>
+  <div class="sub">东南大学 · 085409 生物医学工程(专硕)</div>
+  <div class="date-line" id="headDate"></div>
+</header>
+
+<div class="wrap">
+  <div class="stats">
+    <div class="stat"><div class="num" id="stStreak">0</div><div class="lbl">连续打卡(天)</div></div>
+    <div class="stat g"><div class="num" id="stDone">0</div><div class="lbl">累计完成(天)</div></div>
+    <div class="stat"><div class="num" id="stPct">0%</div><div class="lbl">总进度</div></div>
+  </div>
+  <div class="bar"><i id="barFill" style="width:0%"></i></div>
+
+  <div class="week" id="weekStrip"></div>
+
+  <div id="milestoneBox"></div>
+
+  <div class="card">
+    <span class="phase-pill" id="phasePill"></span>
+    <div style="font-weight:700; margin-bottom:4px;" id="dayTitle"></div>
+    <div id="dayMeta"></div>
+    <div id="taskList"></div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:700; margin-bottom:6px;">📚 本章重难点</div>
+    <div id="chapterNotes"></div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:700; margin-bottom:4px;">⏱️ 专注计时（番茄钟）</div>
+    <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">完成一个专注自动记入今日学习时长</div>
+    <div style="display:flex; gap:10px; margin-bottom:8px;">
+      <label style="flex:1; font-size:12px; color:var(--muted);">专注(分钟)
+        <input type="number" id="focusMin" min="1" max="180" inputmode="numeric" onchange="updateTimerSetting()" style="width:100%; margin-top:3px; padding:8px; border:1px solid var(--line); border-radius:10px; text-align:center; font-size:15px;">
+      </label>
+      <label style="flex:1; font-size:12px; color:var(--muted);">休息(分钟)
+        <input type="number" id="breakMin" min="1" max="60" inputmode="numeric" onchange="updateTimerSetting()" style="width:100%; margin-top:3px; padding:8px; border:1px solid var(--line); border-radius:10px; text-align:center; font-size:15px;">
+      </label>
+    </div>
+    <div id="timerDisplay" style="font-size:40px; font-weight:800; text-align:center; color:var(--accent); margin:6px 0;">25:00</div>
+    <div id="timerMode" style="text-align:center; font-size:13px; color:var(--muted); margin-bottom:10px;">🍅 专注中</div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn-primary" id="timerBtn" style="flex:1;padding:11px;border:none;border-radius:12px;font-weight:600;" onclick="timerToggle()">开始</button>
+      <button class="btn-back" style="flex:1;padding:11px;border-radius:12px;font-weight:600;border:1px solid #e5e7eb;" onclick="timerReset()">重置</button>
+      <button class="btn-back" style="flex:1;padding:11px;border-radius:12px;font-weight:600;border:1px solid #e5e7eb;" onclick="addManual()">+30分</button>
+    </div>
+    <div id="studyToday" style="margin-top:10px; font-size:13px; color:#555; text-align:center;">📊 今日 0分钟 ｜ 本周 0分钟</div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:700; margin-bottom:4px;">📰 考研消息</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">可自行添加/删除，每日更新你的备考动态（重要时间以官方研招网为准）</div>
+    <div id="newsList"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <input type="text" id="newsInput" placeholder="添加消息，如：专业课大纲已公布…" style="flex:1;padding:9px;border:1px solid var(--line);border-radius:10px;font-size:13px;">
+      <button class="btn-primary" style="padding:9px 14px;border:none;border-radius:10px;font-weight:600;" onclick="addNews()">添加</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:700; margin-bottom:6px;">📝 每周回顾</div>
+    <div id="reviewSummary" style="font-size:13px;color:#555;margin-bottom:8px;"></div>
+    <textarea id="reviewText" placeholder="本周复盘：完成了什么 / 卡在哪 / 下周怎么调整…" style="width:100%;height:90px;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;font-family:inherit;resize:vertical;"></textarea>
+    <div style="display:flex;justify-content:flex-end;margin-top:8px;gap:8px;align-items:center;">
+      <span id="reviewSaved" style="display:none;font-size:12px;color:var(--green);">已保存 ✓</span>
+      <button class="btn-primary" style="padding:9px 16px;border:none;border-radius:10px;font-weight:600;" onclick="saveReview()">保存复盘</button>
+    </div>
+  </div>
+
+  <div class="hint">✅ 勾选即保存,数据只存在本机浏览器 · 建议每天睡前检查是否全部完成</div>
+</div>
+
+<div class="nav">
+  <button class="btn-back" onclick="shift(-1)">◀ 上周</button>
+  <button class="btn-primary" onclick="goToday()">回今天</button>
+  <button class="btn-back" onclick="shift(1)">下周 ▶</button>
+</div>
+
+<div class="modal" id="modal">
+  <div class="box">
+    <h3 id="modalTitle">数据备份</h3>
+    <div id="modalDesc" style="font-size:12px;color:#8a8f98;"></div>
+    <textarea id="modalText"></textarea>
+    <div class="row">
+      <button class="btn-back" onclick="closeModal()">关闭</button>
+      <button class="btn-primary" id="modalOk" onclick="modalOk()">确定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PHASES=[
+  {name:'阶段一 · 打基础', start:'2026-09-13', end:'2027-01-31'},
+  {name:'阶段二 · 系统强化', start:'2027-02-01', end:'2027-06-30'},
+  {name:'阶段三 · 暑假冲刺', start:'2027-07-01', end:'2027-08-31'},
+  {name:'阶段四 · 决胜',     start:'2027-09-01', end:'2027-12-25'},
+];
+
+// 每个阶段：周一~周日，每天的任务列表。{m}数学章节 {p}专业课章节 {z}政治进度
+const PLANS=[
+  [ // 阶段一 · 打基础（每天2-2.5h，周五六休息）
+    ['【数学】{m} 教材+讲义精读 (1.5h)','【英语】新词50个 (0.5h)'],
+    ['【数学】{m} 配套基础题 (1.5h)','【英语】长难句/语法 (0.5h)'],
+    ['【专业课】{p} 教材+例题 (1.5h)','【英语】新词50个+复习 (0.5h)'],
+    ['【数学】{m} 刷题+错题整理 (1.5h)','【英语】真题阅读精读1篇 (0.5h)'],
+    ['🎉 休息日,不安排任务(可自由安排)'],
+    ['🎉 休息日,不安排任务(可自由安排)'],
+    ['【数学】{m} 本周复盘+错题本 (1.5h)','【英语】本周词汇复习 (0.5h)'],
+  ],
+  [ // 阶段二 · 系统强化（每天2.5-3h，周五六休息）
+    ['【数学】{m} 新章节 (2h)','【英语】真题阅读精读 (1h)'],
+    ['【数学】{m} 强化题 (2h)','【英语】精读+长难句 (0.5h)'],
+    ['【专业课】{p} 新内容+例题 (2h)','【英语】真题生词 (0.5h)'],
+    ['【数学】{m} 强化题+错题 (2h)','【英语】真题阅读精读 (1h)'],
+    ['🎉 休息日,不安排任务(可自由安排)'],
+    ['🎉 休息日,不安排任务(可自由安排)'],
+    ['【数学】{m} 周测+整理 (1.5h)','【英语】本周复习 (0.5h)'],
+  ],
+  [ // 阶段三 · 暑假冲刺（每天约3h，周五六休息）
+    ['【数学】真题·选择填空(限时) (2h)','【政治】{z} (1h)'],
+    ['【数学】真题·解答题+复盘 (2h)','【英语】真题阅读2篇 (1h)'],
+    ['【专业课】真题练习 (2h)','【政治】{z} (1h)'],
+    ['【英语】真题整套·不含作文 (2h)','【政治】{z} (1h)'],
+    ['🎉 休息日,不安排任务(可自由安排)'],
+    ['🎉 休息日,不安排任务(可自由安排)'],
+    ['【数学】错题二刷 (1.5h)','【英语】作文模板整理 (1h)'],
+  ],
+  [ // 阶段四 · 决胜（每天2.5-3h，周五六休息，周日整卷模考）
+    ['【数学】模考复盘+错题 (1.5h)','【政治】肖八选择 (1h)'],
+    ['【英语】作文背诵+精读 (1.5h)','【政治】肖四大题背诵 (1h)'],
+    ['【专业课】真题二刷 (1.5h)','【政治】肖四大题背诵 (1h)'],
+    ['【英语】全真模考(限时) (2h)','【政治】肖八选择 (1h)'],
+    ['🎉 休息日,不安排任务(可自由安排)'],
+    ['🎉 休息日,不安排任务(可自由安排)'],
+    ['【数学】全真模考(整卷,限时3h)'],
+  ],
+];
+
+// 每周主题（按周推进的具体章节）
+const WEEKLY=[
+  [ // 阶段一(20周)：数学=高数第1-10章(每2周一章)，专业课=信号与系统
+    {m:'高数·第1章 函数与极限(上)', p:'信号·绪论+信号分类与运算'},
+    {m:'高数·第1章 函数与极限(下)', p:'信号·连续系统时域分析'},
+    {m:'高数·第2章 导数与微分(上)', p:'信号·卷积与零状态响应'},
+    {m:'高数·第2章 导数与微分(下)', p:'信号·傅里叶级数'},
+    {m:'高数·第3章 微分中值定理(上)', p:'信号·连续傅里叶变换'},
+    {m:'高数·第3章 导数应用(下)', p:'信号·傅里叶变换性质与应用'},
+    {m:'高数·第4章 不定积分(上)', p:'信号·拉普拉斯变换(上)'},
+    {m:'高数·第4章 不定积分(下)', p:'信号·拉普拉斯变换(下)'},
+    {m:'高数·第5章 定积分(上)', p:'信号·系统函数与频率响应'},
+    {m:'高数·第5章 定积分(下)', p:'信号·离散时间系统时域'},
+    {m:'高数·第6章 定积分的应用(上)', p:'信号·离散系统频域分析'},
+    {m:'高数·第6章 定积分的应用(下)', p:'信号·Z变换(上)'},
+    {m:'高数·第7章 微分方程(上)', p:'信号·Z变换(下)'},
+    {m:'高数·第7章 微分方程(下)', p:'信号·系统综合与总复习'},
+    {m:'高数·第8章 空间解析几何(上)', p:'信号·总复习+真题预热'},
+    {m:'高数·第8章 空间解析几何(下)', p:'DSP预备·离散信号表示'},
+    {m:'高数·第9章 多元函数微分法(上)', p:'DSP预备·采样与重建'},
+    {m:'高数·第9章 多元函数微分法(下)', p:'DSP预备·离散傅里叶思想'},
+    {m:'高数·第10章 重积分(上)', p:'信号·期末查漏补缺'},
+    {m:'高数·第10章 重积分(下)', p:'阶段一收尾复盘'},
+  ],
+  [ // 阶段二(22周)：数学=高数11-12章+线代6章+概率1-3章，专业课=DSP
+    {m:'高数·第11章 曲线积分与曲面积分(上)', p:'DSP·离散信号与系统基础'},
+    {m:'高数·第11章 曲线积分与曲面积分(下)', p:'DSP·离散系统时域分析(卷积)'},
+    {m:'高数·第12章 无穷级数(上)', p:'DSP·Z变换与离散系统频域(上)'},
+    {m:'高数·第12章 无穷级数(下)', p:'DSP·Z变换(下)'},
+    {m:'线代·第1章 行列式(上)', p:'DSP·离散傅里叶变换DFT(上)'},
+    {m:'线代·第1章 行列式(下)', p:'DSP·DFT(下)'},
+    {m:'线代·第2章 矩阵及其运算(上)', p:'DSP·快速傅里叶变换FFT'},
+    {m:'线代·第2章 矩阵及其运算(下)', p:'DSP·数字滤波器基本结构'},
+    {m:'线代·第3章 初等变换与线性方程组(上)', p:'DSP·IIR数字滤波器设计(上)'},
+    {m:'线代·第3章 初等变换与线性方程组(下)', p:'DSP·IIR滤波器设计(下)'},
+    {m:'线代·第4章 向量组的线性相关性(上)', p:'DSP·FIR数字滤波器设计(上)'},
+    {m:'线代·第4章 向量组的线性相关性(下)', p:'DSP·FIR滤波器设计(下)'},
+    {m:'线代·第5章 相似矩阵及二次型(上)', p:'DSP·总复习+真题(上)'},
+    {m:'线代·第5章 相似矩阵及二次型(下)', p:'DSP·真题(下)'},
+    {m:'线代·第6章 线性空间与线性变换', p:'DSP·真题+查漏补缺'},
+    {m:'线代·总复习+数一综合', p:'DSP·真题二刷'},
+    {m:'概率·第1章 概率论基本概念(上)', p:'DSP·薄弱专题突破'},
+    {m:'概率·第1章 概率论基本概念(下)', p:'DSP·综合训练'},
+    {m:'概率·第2章 随机变量及其分布(上)', p:'DSP·真题三刷'},
+    {m:'概率·第2章 随机变量及其分布(下)', p:'DSP·查漏+公式回顾'},
+    {m:'概率·第3章 多维随机变量及其分布(上)', p:'DSP·阶段二收尾'},
+    {m:'概率·第3章 多维随机变量及其分布(下)', p:'DSP·查漏复盘'},
+  ],
+  [ // 阶段三(9周)：数学=概率4-8章+真题，专业课=DSP真题，政治=马原→思修
+    {m:'概率·第4章 随机变量的数字特征', p:'DSP·真题(上)', z:'政治·马原(哲学·上)'},
+    {m:'概率·第5章 大数定律与中心极限定理', p:'DSP·真题(下)', z:'政治·马原(哲学·下)'},
+    {m:'概率·第6章 样本及抽样分布', p:'DSP·真题+查漏', z:'政治·马原(政经+科社)'},
+    {m:'概率·第7章 参数估计', p:'DSP·查漏补缺', z:'政治·毛中特(上)'},
+    {m:'概率·第8章 假设检验', p:'DSP·真题二刷', z:'政治·毛中特(下)'},
+    {m:'数一·真题分类训练(选择填空)', p:'专业课·真题综合', z:'政治·史纲(上)'},
+    {m:'数一·真题分类训练(解答题)', p:'专业课·真题综合', z:'政治·史纲(下)'},
+    {m:'数一·真题套卷训练', p:'专业课·真题+查漏', z:'政治·思修法基'},
+    {m:'数一·真题套卷+查漏补缺', p:'专业课·阶段三收尾', z:'政治·1000题一轮收尾'},
+  ],
+  [], // 阶段四：无周章节（肖八肖四/模考，已在每日任务里）
+];
+
+const MILESTONES=[
+  {date:'2027-09-27', text:'预报名(研招网)'},
+  {date:'2027-10-15', text:'正式报名(核对085409全日制)'},
+  {date:'2027-12-25', text:'初试(政治→英语一→数学一→专业课)'},
+  {date:'2028-02-15', text:'初试出分(预计)'},
+  {date:'2028-03-20', text:'复试(笔试+英语听说+PPT)'},
+];
+
+const STORE_KEY='kaoyan-progress';
+const WEEK=['周一','周二','周三','周四','周五','周六','周日'];
+
+let store=load();
+let cursor=new Date(); // 当前查看的日期
+
+function toKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function parseKey(k){const p=k.split('-').map(Number);return new Date(p[0],p[1]-1,p[2]);}
+function weekday(d){return (d.getDay()+6)%7;}
+function phaseIndex(key){for(let i=0;i<PHASES.length;i++){if(key>=PHASES[i].start&&key<=PHASES[i].end)return i;}return -1;}
+function load(){try{return JSON.parse(localStorage.getItem(STORE_KEY)||'{}');}catch(e){return {};}}
+function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(store));}catch(e){}}
+function isDone(key,i){return (store[key]||[])[i]===true;}
+function setDone(key,i,v){if(!store[key])store[key]=[];store[key][i]=v;save();}
+
+function weekIndex(pi,key){
+  const start=parseKey(PHASES[pi].start).getTime();
+  const d=parseKey(key).getTime();
+  return Math.floor((d-start)/(86400000*7));
+}
+function topics(pi,key){
+  const arr=WEEKLY[pi]||[];
+  if(!arr.length)return{};
+  const wi=Math.max(0,Math.min(weekIndex(pi,key),arr.length-1));
+  return arr[wi]||{};
+}
+function getTasks(key){
+  const pi=phaseIndex(key);
+  if(pi<0)return null;
+  const d=parseKey(key), wd=weekday(d);
+  const t=topics(pi,key);
+  const tasks=PLANS[pi][wd].map(s=>s.replace('{m}',t.m||'').replace('{p}',t.p||'').replace('{z}',t.z||''));
+  return {pi,wd,tasks};
+}
+
+function dayComplete(key){
+  const t=getTasks(key); if(!t)return false;
+  if(t.tasks.length>0&&t.tasks.every(s=>s.indexOf('休息日')>=0))return true; // 计划休息日自动视为完成
+  return t.tasks.every((_,i)=>isDone(key,i));
+}
+function dayPartial(key){
+  const t=getTasks(key); if(!t)return false;
+  const some=t.tasks.some((_,i)=>isDone(key,i));
+  const all=t.tasks.every((_,i)=>isDone(key,i));
+  return some&&!all;
+}
+
+function computeStats(){
+  let totalTasks=0,doneTasks=0,completeDays=0,totalDays=0;
+  let d=parseKey(PHASES[0].start), end=parseKey(PHASES[3].end);
+  while(d<=end){
+    const k=toKey(d), t=getTasks(k);
+    if(t){ totalDays++; totalTasks+=t.tasks.length; let done=t.tasks.filter((_,i)=>isDone(k,i)).length; doneTasks+=done; if(done===t.tasks.length)completeDays++; }
+    d.setDate(d.getDate()+1);
+  }
+  let streak=0, cur=new Date();
+  if(dayComplete(toKey(cur))){
+    while(dayComplete(toKey(cur))){streak++;cur.setDate(cur.getDate()-1);}
+  }else{
+    cur.setDate(cur.getDate()-1);
+    while(dayComplete(toKey(cur))){streak++;cur.setDate(cur.getDate()-1);}
+  }
+  return {totalDays,completeDays,totalTasks,doneTasks,streak,pct:totalTasks?Math.round(doneTasks/totalTasks*100):0};
+}
+
+function renderStats(){
+  const s=computeStats();
+  document.getElementById('stStreak').textContent=s.streak;
+  document.getElementById('stDone').textContent=s.completeDays;
+  document.getElementById('stPct').textContent=s.pct+'%';
+  document.getElementById('barFill').style.width=s.pct+'%';
+}
+
+function renderWeek(){
+  const el=document.getElementById('weekStrip');
+  const today=toKey(new Date());
+  const mon=new Date(cursor); mon.setDate(cursor.getDate()-weekday(cursor));
+  let html='';
+  for(let i=0;i<7;i++){
+    const d=new Date(mon); d.setDate(mon.getDate()+i);
+    const k=toKey(d);
+    const cls=[]; if(k===today)cls.push('today');
+    if(dayComplete(k))cls.push('full'); else if(dayPartial(k))cls.push('part');
+    html+='<div class="wd '+cls.join(' ')+'" onclick="openDay(\''+k+'\')">'
+        +'<div class="d">'+d.getDate()+'</div><div class="w">'+WEEK[i]+'</div><div class="dot"></div></div>';
+  }
+  el.innerHTML=html;
+}
+
+function renderMilestone(){
+  const el=document.getElementById('milestoneBox');
+  const k=toKey(cursor);
+  const m=MILESTONES.find(x=>x.date===k);
+  if(m){el.innerHTML='<div class="milestone"><b>📌 重要节点</b>'+m.text+'</div>';}
+  else{el.innerHTML='';}
+}
+
+function renderTasks(){
+  const k=toKey(cursor);
+  const d=new Date(cursor);
+  document.getElementById('headDate').textContent=d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日 '+WEEK[weekday(d)];
+  const t=getTasks(k);
+  const pill=document.getElementById('phasePill');
+  const title=document.getElementById('dayTitle');
+  const meta=document.getElementById('dayMeta');
+  const list=document.getElementById('taskList');
+  if(!t){
+    pill.textContent='不在计划内'; title.textContent=''; meta.textContent=''; list.innerHTML='<div style="color:#8a8f98;">该日期不在备考周期内</div>'; return;
+  }
+  pill.textContent=PHASES[t.pi].name+' · '+WEEK[t.wd];
+  title.textContent=d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日 任务';
+  const tp=topics(t.pi,k);
+  const foc=[];
+  if(tp.m)foc.push('数学：'+tp.m);
+  if(tp.p)foc.push('专业课：'+tp.p);
+  if(tp.z)foc.push('政治：'+tp.z);
+  meta.innerHTML=(foc.length?'<div class="focus">📌 本周重点<br>'+foc.join('<br>')+'</div>':'')
+    +'<div style="font-size:12px;color:var(--muted);">共 '+t.tasks.length+' 项 · 全部勾选=当日完成</div>';
+  let html='';
+  t.tasks.forEach((task,i)=>{
+    const done=isDone(k,i);
+    html+='<label class="task'+(done?' done':'')+'"><input type="checkbox" '+(done?'checked':'')+' onchange="toggle(\''+k+'\','+i+',this.checked)"><span class="t">'+task+'</span></label>';
+  });
+  list.innerHTML=html;
+}
+
+function toggle(k,i,v){setDone(k,i,v);renderTasks();renderWeek();renderStats();}
+function openDay(k){cursor=parseKey(k);renderAll();}
+function goToday(){cursor=new Date();renderAll();}
+function shift(n){cursor.setDate(cursor.getDate()+n*7);renderAll();}
+function renderAll(){renderTasks();renderWeek();renderMilestone();renderStats();renderStudy();renderChapterNotes();renderNews();renderReview();}
+
+// 备份 / 恢复
+let modalMode='backup';
+function openBackup(){
+  modalMode='backup';
+  document.getElementById('modalTitle').textContent='数据备份';
+  document.getElementById('modalDesc').textContent='复制下面这段文字，存到备忘录或发给文件传输助手，即可备份进度。';
+  document.getElementById('modalText').value=JSON.stringify(store);
+  document.getElementById('modalOk').textContent='复制';
+  document.getElementById('modal').classList.add('show');
+}
+function openRestore(){
+  modalMode='restore';
+  document.getElementById('modalTitle').textContent='恢复数据';
+  document.getElementById('modalDesc').textContent='把之前备份的文字粘贴到下面，点“恢复”。';
+  document.getElementById('modalText').value='';
+  document.getElementById('modalOk').textContent='恢复';
+  document.getElementById('modal').classList.add('show');
+}
+function modalOk(){
+  const txt=document.getElementById('modalText').value;
+  if(modalMode==='backup'){
+    const ta=document.getElementById('modalText'); ta.select();
+    if(navigator.clipboard){navigator.clipboard.writeText(txt).then(()=>{}).catch(()=>{});}
+    document.execCommand('copy');
+    document.getElementById('modalDesc').textContent='已复制(如未成功请长按手动复制)';
+  }else{
+    try{store=JSON.parse(txt);save();renderAll();closeModal();}catch(e){alert('格式不对,恢复失败');}
+  }
+}
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+
+// ===== 学习时长 & 番茄钟 =====
+const STUDY_KEY='kaoyan-study';
+let studyStore=loadStudy();
+function loadStudy(){try{return JSON.parse(localStorage.getItem(STUDY_KEY)||'{}');}catch(e){return {};}}
+function saveStudy(){try{localStorage.setItem(STUDY_KEY,JSON.stringify(studyStore));}catch(e){}}
+function todayKey(){return toKey(new Date());}
+function addMinutes(k,min){studyStore[k]=(studyStore[k]||0)+min;saveStudy();renderStudy();}
+function fmt(min){const h=Math.floor(min/60),m=min%60;return h>0?(h+'小时'+(m?m+'分':'')):(m+'分钟');}
+function weekStudyTotal(){
+  const now=new Date(), mon=new Date(now); mon.setDate(now.getDate()-weekday(now));
+  let sum=0; for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);sum+=(studyStore[toKey(d)]||0);}
+  return sum;
+}
+function renderStudy(){
+  const el=document.getElementById('studyToday');
+  if(el)el.textContent='📊 今日 '+fmt(studyStore[todayKey()]||0)+' ｜ 本周 '+fmt(weekStudyTotal());
+}
+
+const TIMER_KEY='kaoyan-timer';
+function loadTimerSetting(){
+  try{const s=JSON.parse(localStorage.getItem(TIMER_KEY)||'{}');
+    return {focus:Math.min(180,Math.max(1,s.focus||25)), brk:Math.min(60,Math.max(1,s.brk||5))};}
+  catch(e){return {focus:25, brk:5};}
+}
+let focusMinVal=25, breakMinVal=5, focusMs=25*60*1000, breakMs=5*60*1000;
+(function initTimerSetting(){
+  const s=loadTimerSetting(); focusMinVal=s.focus; breakMinVal=s.brk;
+  focusMs=focusMinVal*60*1000; breakMs=breakMinVal*60*1000;
+  const fi=document.getElementById('focusMin'), bi=document.getElementById('breakMin');
+  if(fi)fi.value=focusMinVal; if(bi)bi.value=breakMinVal;
+})();
+
+let mode='focus', remain=focusMs, running=false, endAt=0, id=null;
+function setBtn(t){document.getElementById('timerBtn').textContent=t;}
+function renderTimer(){
+  const ms=running?Math.max(0,endAt-Date.now()):remain;
+  const total=Math.round(ms/1000), m=Math.floor(total/60), s=total%60;
+  document.getElementById('timerDisplay').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  document.getElementById('timerMode').textContent=mode==='focus'?'🍅 专注中':'☕ 休息';
+}
+function updateTimerSetting(){
+  const f=parseInt(document.getElementById('focusMin').value,10);
+  const b=parseInt(document.getElementById('breakMin').value,10);
+  if(!isNaN(f)&&f>=1){focusMinVal=Math.min(180,f);}
+  if(!isNaN(b)&&b>=1){breakMinVal=Math.min(60,b);}
+  focusMs=focusMinVal*60*1000; breakMs=breakMinVal*60*1000;
+  try{localStorage.setItem(TIMER_KEY,JSON.stringify({focus:focusMinVal,brk:breakMinVal}));}catch(e){}
+  document.getElementById('focusMin').value=focusMinVal;
+  document.getElementById('breakMin').value=breakMinVal;
+  timerReset();
+}
+function timerToggle(){
+  if(running){remain=Math.max(0,endAt-Date.now());clearInterval(id);running=false;setBtn('继续');}
+  else{endAt=Date.now()+remain;running=true;id=setInterval(tick,250);setBtn('暂停');}
+  renderTimer();
+}
+function tick(){
+  const left=endAt-Date.now();
+  if(left<=0){clearInterval(id);running=false;
+    if(mode==='focus'){addMinutes(todayKey(),focusMinVal);mode='break';remain=breakMs;}
+    else{mode='focus';remain=focusMs;}
+    setBtn('开始');renderStudy();renderTimer();return;
+  }
+  renderTimer();
+}
+function timerReset(){clearInterval(id);running=false;mode='focus';remain=focusMs;setBtn('开始');renderTimer();}
+function addManual(){addMinutes(todayKey(),30);}
+
+// ===== 章节重难点 / 知识点 =====
+const MATH_NOTES={
+ '高数·第1章':{points:['函数定义域、有界性、奇偶性、周期性','极限定义(ε-δ)与左右极限','无穷小/无穷大、等价无穷小代换','两个重要极限','连续性与间断点、闭区间连续函数性质'],hard:['极限计算(等价无穷小、洛必达)','间断点分类','夹逼/单调有界准则']},
+ '高数·第2章':{points:['导数定义与几何意义','可导与连续的关系','求导法则、复合/隐函数/参数方程求导','高阶导数','微分与近似计算'],hard:['分段函数/含参导数定义题','隐函数与参数方程求导','莱布尼茨高阶导数公式']},
+ '高数·第3章':{points:['罗尔/拉格朗日/柯西中值定理','洛必达法则','泰勒公式','单调性、极值、最值','凹凸性与拐点、渐近线'],hard:['中值定理证明(构造函数)','泰勒展开与余项','极值/最值应用题']},
+ '高数·第4章':{points:['原函数与不定积分概念','基本积分表','第一/第二类换元积分法','分部积分法','有理函数与三角有理式积分'],hard:['换元与分部的灵活选择','部分分式分解']},
+ '高数·第5章':{points:['定积分定义与几何意义','牛顿-莱布尼茨公式','定积分换元与分部','变上限积分函数','反常积分'],hard:['变上限积分求导','对称性/奇偶性简化','反常积分敛散性']},
+ '高数·第6章':{points:['平面图形面积','旋转体体积(圆盘/柱壳)','平面曲线弧长','物理应用(功、压力、质心)'],hard:['体积公式选择','微元法建模']},
+ '高数·第7章':{points:['可分离变量、齐次、一阶线性方程','伯努利方程','可降阶高阶方程','二阶常系数线性方程(齐次/非齐次)','差分方程(数一)'],hard:['二阶非齐次特解设定','解的叠加原理']},
+ '高数·第8章':{points:['向量运算(点积/叉积/混合积)','平面方程','直线方程','曲面(旋转面、柱面、二次曲面)','空间曲线及其投影'],hard:['线面位置关系、点线面距离','二次曲面识别']},
+ '高数·第9章':{points:['多元函数极限与连续','偏导数与全微分','复合函数求导(链式法则)','隐函数求导','方向导数与梯度','多元极值与条件极值(拉格朗日乘数)'],hard:['链式法则与隐函数求导','条件极值应用题','可微判定']},
+ '高数·第10章':{points:['二重积分计算(直角/极坐标)','三重积分(直角/柱面/球面坐标)','积分换序','应用(面积/体积/质量)'],hard:['极坐标/球坐标换元','积分区域变换与换序']},
+ '高数·第11章':{points:['第一类曲线/曲面积分','第二类曲线/曲面积分','格林公式','斯托克斯公式','高斯公式','路径无关条件'],hard:['格林/高斯/斯托克斯公式应用','路径无关与全微分','两类积分互化']},
+ '高数·第12章':{points:['数项级数敛散性(比较/比值/根值/交错)','幂级数收敛域与和函数','函数展开成幂级数','傅里叶级数(数一)'],hard:['幂级数和函数求解','绝对/条件收敛判别','傅里叶级数展开与收敛定理']},
+ '线代·第1章':{points:['行列式定义与性质','按行(列)展开','克拉默法则','三角/范德蒙德行列式'],hard:['行列式计算技巧','代数余子式']},
+ '线代·第2章':{points:['矩阵加减乘/数乘/转置','逆矩阵与伴随矩阵','矩阵分块','初等矩阵'],hard:['逆矩阵求解','矩阵方程','伴随矩阵性质']},
+ '线代·第3章':{points:['初等行变换与矩阵的秩','齐次/非齐次方程组解的结构','基础解系','通解'],hard:['含参方程组讨论','解的结构判定']},
+ '线代·第4章':{points:['向量组线性相关/无关判定','向量组的秩与极大无关组','向量空间、基、维数'],hard:['相关性证明题','极大无关组']},
+ '线代·第5章':{points:['特征值与特征向量','相似对角化','实对称矩阵正交对角化','二次型与标准型、正定性'],hard:['特征值特征向量','正交对角化','正定判定']},
+ '线代·第6章':{points:['线性空间','基变换与坐标变换','线性变换及其矩阵'],hard:['基变换公式','线性变换矩阵(数一有限要求)']},
+ '概率·第1章':{points:['随机事件、概率定义与性质','条件概率、乘法公式','全概率公式与贝叶斯公式','独立性'],hard:['全概率/贝叶斯应用']},
+ '概率·第2章':{points:['分布函数','离散/连续随机变量','常见分布(0-1/二项/泊松/均匀/指数/正态)','随机变量函数分布'],hard:['分布函数法求函数分布','正态分布标准化']},
+ '概率·第3章':{points:['联合分布、边缘分布、条件分布','独立性','二维随机变量函数的分布','常见二维分布'],hard:['二维函数分布(卷积公式)','边缘与条件分布']},
+ '概率·第4章':{points:['期望、方差','协方差、相关系数','矩','常见分布数字特征'],hard:['相关系数计算','期望方差性质']},
+ '概率·第5章':{points:['切比雪夫不等式','大数定律','中心极限定理(独立同分布/棣莫弗-拉普拉斯)'],hard:['中心极限定理应用计算']},
+ '概率·第6章':{points:['总体与样本、统计量','三大抽样分布(卡方/t/F)','正态总体的样本均值/方差分布'],hard:['三大分布构造与性质']},
+ '概率·第7章':{points:['矩估计','最大似然估计','无偏性/有效性/一致性','区间估计(正态总体)'],hard:['最大似然估计','区间估计']},
+ '概率·第8章':{points:['假设检验思想、两类错误','正态总体均值/方差检验','拒绝域'],hard:['拒绝域与两类错误(数一要求较少)']},
+};
+const PRO_NOTES=[
+ {kw:'基础',points:['信号分类(连续/离散、能量/功率)','基本运算(平移/翻转/尺度)','系统性质(线性/时不变/因果/稳定)'],hard:['系统性质判定(线性/时不变)']},
+ {kw:'绪论',points:['信号分类与运算','系统性质(线性/时不变/因果/稳定)'],hard:['系统性质判定']},
+ {kw:'采样',points:['采样定理(奈奎斯特)','采样与重建','频谱混叠'],hard:['采样定理应用、混叠']},
+ {kw:'卷积',points:['卷积积分/卷积和','卷积性质(交换/结合/分配)','零状态响应=激励卷积冲激响应'],hard:['卷积计算','零状态响应求解']},
+ {kw:'拉普拉斯',points:['拉氏变换定义与收敛域','常用变换对与性质','逆变换(部分分式)','用拉氏变换解微分方程、系统函数'],hard:['收敛域','部分分式展开','系统函数与稳定性']},
+ {kw:'Z变换',points:['Z变换定义与收敛域','性质与常用变换对','逆Z变换','离散系统函数与稳定性'],hard:['逆Z变换','收敛域与稳定性']},
+ {kw:'DFT',points:['离散傅里叶变换定义与性质','循环卷积','DFT计算'],hard:['DFT性质','循环卷积']},
+ {kw:'FFT',points:['基2 FFT(时域抽取/频域抽取)','蝶形运算','运算量对比'],hard:['FFT流图','蝶形运算']},
+ {kw:'滤波器',points:['IIR/FIR基本结构(直接型/级联/并联)','IIR设计(冲激响应不变法/双线性变换)','FIR设计(窗函数法/频率采样法)','线性相位条件'],hard:['双线性变换与频率预畸变','窗函数设计、线性相位']},
+ {kw:'傅里叶',points:['周期信号傅里叶级数','非周期信号傅里叶变换','常用变换对与性质(时移/频移/卷积)','采样定理'],hard:['傅里叶变换性质应用','采样定理']},
+ {kw:'频响|频域|系统函数',points:['系统函数H(s)/H(z)','频率响应H(jω)','零极点与稳定性','波特图与滤波器'],hard:['零极点分析','稳定性判据']},
+ {kw:'时域',points:['微分/差分方程描述','冲激响应与阶跃响应','卷积求零状态响应'],hard:['方程求解','卷积计算']},
+];
+const EXAMPLES={
+ '高数·第1章':[
+  {q:'求 lim(x→0)(1-cosx)/x²',a:'原式=lim 2sin²(x/2)/x²=2·(1/2)²=1/2'},
+  {q:'讨论 f(x)=|x|/x 在 x=0 处的间断点类型',a:'左极限=-1,右极限=1,不相等 → 跳跃间断点'},
+ ],
+ '高数·第2章':[
+  {q:'y=x^x (x>0),求 dy/dx',a:'对数求导:lny=x·lnx,两端求导 → dy/dx=x^x(lnx+1)'},
+  {q:'由 e^y+xy=e 确定的隐函数,求 dy/dx',a:'e^y·y′+y+x·y′=0 → y′=-y/(e^y+x)'},
+ ],
+ '高数·第3章':[
+  {q:'用拉格朗日中值定理证明 |sina-sinb|≤|a-b|',a:'f=sinx 在[a,b]上用中值定理:|sina-sinb|=|cosξ|·|a-b|≤|a-b|'},
+  {q:'求 f(x)=x³-3x 的极值',a:'f′=3x²-3=0 → x=±1;极小值 f(1)=-2,极大值 f(-1)=2'},
+ ],
+ '高数·第4章':[
+  {q:'求 ∫ x·lnx dx',a:'分部积分:=(x²/2)lnx-∫(x/2)dx=(x²/2)lnx-x²/4+C'},
+  {q:'求 ∫ dx/(x²+2x+2)',a:'配方法:=∫ d(x+1)/[(x+1)²+1]=arctan(x+1)+C'},
+ ],
+ '高数·第5章':[
+  {q:'求 d/dx ∫[0,x] sin(t²)dt',a:'变上限积分求导:=sin(x²)'},
+  {q:'求 ∫[-1,1] x³/(1+x²) dx',a:'被积函数为奇函数,对称区间上积分=0'},
+ ],
+ '高数·第6章':[
+  {q:'y=x²(0≤x≤1)绕 x 轴旋转,求旋转体体积',a:'V=π∫[0,1]x⁴dx=π/5'},
+  {q:'求 y=x² 与 y=x 所围图形的面积',a:'S=∫[0,1](x-x²)dx=1/6'},
+ ],
+ '高数·第7章':[
+  {q:'求 y′+y=e^x 的通解',a:'积分因子 e^x:(y·e^x)′=e^(2x) → y=e^x/2+C·e^(-x)'},
+  {q:'求 y″+3y′+2y=0 的通解',a:'特征方程 r²+3r+2=0 → r=-1,-2 → y=C₁e^(-x)+C₂e^(-2x)'},
+ ],
+ '高数·第8章':[
+  {q:'求点 P(1,2,3) 到平面 x+y+z=1 的距离',a:'d=|1+2+3-1|/√3=5/√3'},
+  {q:'判断曲面 x²+y²-z=0 的类型',a:'z=x²+y² → 旋转抛物面'},
+ ],
+ '高数·第9章':[
+  {q:'z=x²y+y²,求 ∂z/∂x 与 ∂z/∂y',a:'∂z/∂x=2xy,∂z/∂y=x²+2y'},
+  {q:'求 f=x²+y² 在条件 x+y=1 下的极值',a:'拉格朗日乘数法 → x=y=1/2,极小值 1/2'},
+ ],
+ '高数·第10章':[
+  {q:'求 ∫∫D (x²+y²)dxdy,其中 D:x²+y²≤1',a:'极坐标:∫[0,2π]dθ∫[0,1]r³dr=2π·1/4=π/2'},
+  {q:'求 ∫∫D x dxdy,其中 D 由 y=x² 与 y=x 围成',a:'=∫[0,1]dx∫[x²,x]x dy=∫[0,1]x(x-x²)dx=1/12'},
+ ],
+ '高数·第11章':[
+  {q:'∮L x dy-y dx,其中 L 为单位圆(正向)',a:'格林公式:=∫∫(1+1)dxdy=2π'},
+  {q:'∯ x dydz+y dzdx+z dxdy,其中 S 为单位球面外侧',a:'高斯公式:=∫∫∫3 dV=3·(4π/3)=4π'},
+ ],
+ '高数·第12章':[
+  {q:'求幂级数 ∑xⁿ (n=0→∞) 的和函数',a:'=1/(1-x),|x|<1'},
+  {q:'判断 ∑1/n² 与 ∑1/n 的敛散性',a:'p 级数:p=2>1 收敛;p=1 发散'},
+ ],
+ '线代·第1章':[
+  {q:'计算范德蒙德行列式 |1 1 1;1 2 3;1 4 9|',a:'=(2-1)(3-1)(3-2)=2'},
+  {q:'计算 |2 1;4 3|',a:'=2×3-1×4=2'},
+ ],
+ '线代·第2章':[
+  {q:'A=[[1,2],[3,4]],求 A^(-1)',a:'=(-1/2)[[4,-2],[-3,1]]=[[-2,1],[3/2,-1/2]]'},
+  {q:'解矩阵方程 AX=B:A=[[2,1],[1,1]],B=[[1],[1]]',a:'X=A^(-1)B;A^(-1)=[[1,-1],[-1,2]] → X=[[0],[1]]'},
+ ],
+ '线代·第3章':[
+  {q:'求齐次方程组 x+y+z=0,2x-y+z=0 的基础解系与通解',a:'基础解系 (2,1,-3)ᵀ;通解 x=k(2,1,-3)ᵀ'},
+  {q:'判断方程组 x+y=1,x-y=2 解的情况',a:'系数行列式≠0,有唯一解 x=3/2,y=-1/2'},
+ ],
+ '线代·第4章':[
+  {q:'判断 α₁=(1,2)ᵀ 与 α₂=(2,4)ᵀ 是否线性相关',a:'α₂=2α₁ → 线性相关'},
+  {q:'求 α₁=(1,0,0)ᵀ,α₂=(0,1,0)ᵀ,α₃=(1,1,0)ᵀ 的极大无关组与秩',a:'α₁,α₂ 为极大无关组,秩=2'},
+ ],
+ '线代·第5章':[
+  {q:'求 A=[[1,2],[2,1]] 的特征值与特征向量',a:'λ₁=3 对应 (1,1)ᵀ;λ₂=-1 对应 (1,-1)ᵀ'},
+  {q:'判断二次型 f(x₁,x₂)=x₁²+2x₂² 是否正定',a:'标准型系数全为正 → 正定'},
+ ],
+ '线代·第6章':[
+  {q:'求 R² 中从标准基到 α₁=(1,1)ᵀ,α₂=(1,-1)ᵀ 的过渡矩阵',a:'C=[[1,1],[1,-1]]'},
+  {q:'向量在基 β₁=(1,0)ᵀ,β₂=(1,1)ᵀ 下坐标为 (1,2)ᵀ,求标准基下坐标',a:'=1·(1,0)ᵀ+2·(1,1)ᵀ=(3,2)ᵀ'},
+ ],
+ '概率·第1章':[
+  {q:'三台机床产量占 25%、35%、40%,次品率 5%、4%、2%,求任取一件为次品的概率',a:'全概率公式:=0.25×0.05+0.35×0.04+0.40×0.02=0.0345'},
+  {q:'承上题,若取到的是次品,求它来自第一台机床的概率',a:'贝叶斯公式:=0.25×0.05/0.0345≈0.362'},
+ ],
+ '概率·第2章':[
+  {q:'X~U(0,1),求 Y=X² 的概率密度',a:'f(y)=1/(2√y),0<y<1'},
+  {q:'X~N(0,1),求 P(|X|<1)',a:'=2Φ(1)-1≈0.6826'},
+ ],
+ '概率·第3章':[
+  {q:'(X,Y) 在 0<x<1,0<y<1 上服从均匀分布,求边缘密度',a:'f_X(x)=1 (0<x<1);f_Y(y)=1 (0<y<1)'},
+  {q:'X,Y 独立同 U(0,1),求 Z=X+Y 的概率密度',a:'卷积公式:f(z)=z (0<z<1);f(z)=2-z (1<z<2)'},
+ ],
+ '概率·第4章':[
+  {q:'X 分布律 P(X=1)=0.5,P(X=2)=0.5,求 EX 与 DX',a:'EX=1.5,EX²=2.5 → DX=2.5-2.25=0.25'},
+  {q:'X~B(10,0.3),求 EX 与 DX',a:'EX=np=3;DX=np(1-p)=2.1'},
+ ],
+ '概率·第5章':[
+  {q:'EX=100,DX=16,用切比雪夫不等式估计 P(90<X<110)',a:'P(|X-100|<10)≥1-16/100=0.84'},
+  {q:'掷骰子100次,求点数之和 S 落在 300~400 的概率(近似)',a:'中心极限定理:≈Φ(2.93)-Φ(-2.93)≈0.9966'},
+ ],
+ '概率·第6章':[
+  {q:'X₁,…,Xₙ 独立同 N(0,1),判断 ∑Xᵢ² 的分布',a:'服从 χ²(n) 分布'},
+  {q:'X~N(0,1) 与 Y~χ²(n) 独立,判断 X/√(Y/n) 的分布',a:'服从 t(n) 分布'},
+ ],
+ '概率·第7章':[
+  {q:'X~U(0,θ),样本 x₁,…,xₙ,求 θ 的矩估计与极大似然估计',a:'矩估计=2×样本均值;MLE=样本最大值 x(n)'},
+  {q:'X~B(1,p),n 次观测中有 k 次取 1,求 p 的极大似然估计',a:'p 的 MLE=k/n'},
+ ],
+ '概率·第8章':[
+  {q:'X~N(μ,σ²),σ² 已知,检验 H₀:μ=μ₀(α=0.05),给出拒绝域',a:'|(样本均值-μ₀)/(σ/√n)|>1.96'},
+  {q:'单侧 z 检验 α=0.05 时的临界值',a:'z=1.645'},
+ ],
+};
+const PRO_EXAMPLES=[
+ {kw:'基础',ex:[{q:'判断 y(t)=x(t-2) 系统的线性、时不变、因果、稳定性',a:'线性√、时不变√、因果√、稳定√'}]},
+ {kw:'绪论',ex:[{q:'f(t)=cos(ω₀t) 是能量信号还是功率信号?',a:'周期信号 → 功率信号'}]},
+ {kw:'采样',ex:[{q:'信号最高频率 fₘ=4kHz,求无失真采样的最小采样频率',a:'奈奎斯特:fₛ≥2fₘ=8kHz'}]},
+ {kw:'卷积',ex:[{q:'x(n)={1,2},h(n)={1,1},求卷积和 y(n)',a:'y(n)={1,3,2}'}]},
+ {kw:'拉普拉斯',ex:[{q:'求 f(t)=e^(-2t)u(t) 的拉普拉斯变换',a:'F(s)=1/(s+2),Re(s)>-2'}]},
+ {kw:'Z变换',ex:[{q:'求 x(n)=aⁿu(n) 的 Z 变换及收敛域',a:'X(z)=1/(1-a·z^(-1)),|z|>|a|'}]},
+ {kw:'DFT',ex:[{q:'x(n)={1,2,3,4},求 4 点 DFT',a:'X(k)={10,-2+2j,-2,-2-2j}'}]},
+ {kw:'FFT',ex:[{q:'8 点 FFT 需要几级蝶形运算?共几个蝶形?',a:'log₂8=3 级,每级 4 个,共 12 个蝶形'}]},
+ {kw:'滤波器',ex:[{q:'用双线性变换(T=2)把 H(s)=1/(s+1) 映射为 H(z)',a:'s=(1-z^(-1))/(1+z^(-1)) → H(z)=(1+z^(-1))/2'}]},
+ {kw:'傅里叶',ex:[{q:'求 e^(-t)u(t) 的傅里叶变换',a:'F(jω)=1/(1+jω)'}]},
+ {kw:'频响|频域|系统函数',ex:[{q:'H(s)=1/(s+1),判断系统是否稳定',a:'极点 s=-1 在左半平面 → 稳定'}]},
+ {kw:'时域',ex:[{q:'差分方程 y(n)=x(n)+2x(n-1),求单位样值响应 h(n)',a:'h(n)=δ(n)+2δ(n-1)={1,2}'}]},
+];
+function chapterNotes(topic){
+  if(!topic)return null;
+  const m=topic.match(/^(高数|线代|概率)·第\d+章/);
+  if(m){
+    const n=MATH_NOTES[m[0]];
+    if(n)return {points:n.points,hard:n.hard,examples:EXAMPLES[m[0]]||[]};
+    return null;
+  }
+  for(let i=0;i<PRO_NOTES.length;i++){
+    const n=PRO_NOTES[i];
+    if(new RegExp(n.kw).test(topic)){
+      const pe=PRO_EXAMPLES.find(x=>x.kw===n.kw);
+      return {points:n.points,hard:n.hard,examples:(pe&&pe.ex)||[]};
+    }
+  }
+  return null;
+}
+function toggleAnswer(btn){
+  const a=btn.nextElementSibling;
+  const show=a.style.display==='none';
+  a.style.display=show?'block':'none';
+  btn.textContent=show?'▾ 收起答案':'▸ 查看答案';
+}
+function renderChapterNotes(){
+  const el=document.getElementById('chapterNotes'); if(!el)return;
+  const k=toKey(cursor), t=getTasks(k);
+  if(!t){el.innerHTML='';return;}
+  const tp=topics(t.pi,k); const items=[];
+  if(tp.m){const n=chapterNotes(tp.m); if(n)items.push({title:tp.m,n:n});}
+  if(tp.p){const n=chapterNotes(tp.p); if(n)items.push({title:tp.p,n:n});}
+  if(!items.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;">本周为综合/真题阶段，无独立章节重点</div>';return;}
+  let html='';
+  for(const it of items){
+    html+='<div style="margin-bottom:10px;">'
+      +'<div style="font-weight:600;font-size:13px;color:var(--accent);margin-bottom:4px;">'+it.title+'</div>'
+      +'<div style="font-size:13px;color:#333;line-height:1.7;margin-bottom:2px;"><b>知识点：</b>'+it.n.points.join('、')+'</div>'
+      +'<div style="font-size:13px;color:#b45309;line-height:1.7;margin-bottom:6px;"><b>重难点：</b>'+it.n.hard.join('、')+'</div>';
+    if(it.n.examples&&it.n.examples.length){
+      html+='<div style="font-size:13px;color:#7c3aed;line-height:1.7;margin-bottom:3px;"><b>✏️ 经典例题(先做再看答案)</b></div>';
+      for(let ei=0;ei<it.n.examples.length;ei++){
+        const e=it.n.examples[ei];
+        html+='<div style="font-size:13px;color:#1a1a2e;line-height:1.7;margin-bottom:2px;"><b>例'+(ei+1)+'：</b>'+e.q+'</div>'
+          +'<div style="font-size:12px;color:#7c3aed;margin-bottom:2px;cursor:pointer;user-select:none;" onclick="toggleAnswer(this)">▸ 查看答案</div>'
+          +'<div style="display:none;font-size:13px;color:#7c3aed;line-height:1.7;margin-bottom:6px;padding-left:6px;border-left:3px solid #ddd6fe;"><b>解：</b>'+e.a+'</div>';
+      }
+    }
+    html+='</div>';
+  }
+  el.innerHTML=html;
+}
+
+// ===== 考研消息 =====
+const NEWS_KEY='kaoyan-news';
+const NEWS_SEED=[
+ {id:'s1',date:'2024-03-22',text:'东南085409专硕复试线：2024年310分(单科50/50/70/70)'},
+ {id:'s2',date:'2024-08-13',text:'2024年085409报考42人、录取18人(推免4+统考14)，报录比约3:1'},
+ {id:'s3',date:'2024-08-15',text:'【重点】东南生医工学科评估A+、全国顶尖，复试不歧视双非和跨考生，985中性价比较高'},
+ {id:'s4',date:'2024-08-15',text:'【重点】专业课可选「837生物信号处理」，与医学信息工程的信息类基础最贴近'},
+ {id:'s5',date:'2024-08-15',text:'【重点】复试=笔试(558生化+559微机在生物医学中的应用，150分/合格线90)+1分钟英文自我介绍+PPT展示，重点问毕设和项目'},
+ {id:'s6',date:'2024-08-15',text:'数学一主线推荐：高数武忠祥、线代李永乐、概率余丙森，真题计时一套一套刷'},
+ {id:'s7',date:'2025-05-09',text:'学院公告：2026级生物医学工程初试/复试科目调整(官方)'},
+ {id:'s8',date:'2025-05-29',text:'【重点·官方】专业课改为「837生物信号处理」，参考书：陈后金《数字信号处理》第3版+程佩青《数字信号处理教程》第5版+奥本海姆《离散时间信号处理》第3版'},
+ {id:'s9',date:'2025-09-15',text:'【重点】2026级085409全日制统考仅6人(较2025约12人减半)，含生物信息技术、医学图像等7个方向'},
+ {id:'s10',date:'2025-10-01',text:'医学信息工程跨考生可行：多数院校考数学一，需提前补信号处理；择校按「挑战-冲刺-稳妥-保底」梯度'},
+ {id:'s11',date:'2025-12-20',text:'2026考研报名343万人，连续第三年下降(2023年474万→2026年343万)'},
+ {id:'s12',date:'2026-02-28',text:'2026工学国家线A区264分(+4)、单科35分，报名人数降但线不降反升'},
+ {id:'s13',date:'2026-03-16',text:'【重点】2026级085409全日制复试线320分(50/50/70/70)；非全日制(卓工学院)270分'},
+ {id:'s14',date:'2026-07-01',text:'国务院「健康十五五」规划：重点支持创新药械、医工协同、AI赋能高端医疗器械'},
+ {id:'s15',date:'2026-08-01',text:'2026数学一平均分不足70分，命题计算量加大(单套积分步骤超80)、概念理解升级'},
+ {id:'s16',date:'2026-08-01',text:'医学信息工程是三大医工专业中最易直接就业的「刚需专业」(医疗信息化、医院信息科、医疗大数据)'},
+ {id:'s17',date:'2026-09-04',text:'2026智能医疗器械职位同比+113%，应届研究生薪资13-22万，集中在迈瑞/联影/微创等龙头'},
+ {id:'s18',date:'2026-09-04',text:'2027考研官方时间预计9月中下旬发布(当前尚未发布)'},
+ {id:'s19',date:'2026-09-13',text:'[今日] 2027东南085409官方招生简章/计划尚未发布，暂无官方数据'},
+ {id:'s20',date:'2026-09-24',text:'当前周期·2027预报名：9月下旬(预计9月24-27日)'},
+ {id:'s21',date:'2026-10-08',text:'当前周期·2027正式报名：10月8-25日'},
+ {id:'s22',date:'2026-12-19',text:'当前周期·2027初试：12月19-21日(倒数第二个周末)'},
+ {id:'s23',date:'2027-09-15',text:'我的周期：2028考研新大纲预计发布(核对专业课837与参考书)'},
+ {id:'s24',date:'2027-09-27',text:'我的周期：预报名开始(研招网)'},
+ {id:'s25',date:'2027-10-15',text:'我的周期：正式报名(核对085409全日制、专业代码)'},
+ {id:'s26',date:'2027-12-18',text:'【重点】2028考研初试预计2027年12月18-19日或25-26日(倒数第二个周末)'},
+ {id:'s27',date:'2028-02-15',text:'我的周期：初试成绩公布(预计)'},
+ {id:'s28',date:'2028-03-20',text:'我的周期：复试(笔试+英语听说+PPT展示)'},
+];
+let news=loadNews();
+function loadNews(){try{const s=JSON.parse(localStorage.getItem(NEWS_KEY));if(Array.isArray(s)&&s.length)return s;}catch(e){}return NEWS_SEED.slice();}
+function saveNews(){try{localStorage.setItem(NEWS_KEY,JSON.stringify(news));}catch(e){}}
+function renderNews(){
+  const el=document.getElementById('newsList'); if(!el)return;
+  const sorted=news.slice().sort((a,b)=>a.date<b.date?-1:1);
+  let html='';
+  for(const n of sorted){
+    html+='<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);">'
+      +'<span style="font-size:11px;color:var(--muted);flex:none;padding-top:2px;">'+n.date+'</span>'
+      +'<span style="flex:1;font-size:13px;">'+n.text+'</span>'
+      +'<span style="cursor:pointer;color:#cbd5e1;flex:none;padding-top:1px;" onclick="delNews(\''+n.id+'\')">✕</span>'
+      +'</div>';
+  }
+  el.innerHTML=html||'<div style="color:var(--muted);font-size:13px;">暂无消息</div>';
+}
+function addNews(){
+  const inp=document.getElementById('newsInput'); const v=(inp.value||'').trim(); if(!v)return;
+  news.push({id:'u'+Date.now(),date:toKey(new Date()),text:v}); saveNews(); inp.value=''; renderNews();
+}
+function delNews(id){news=news.filter(x=>x.id!==id);saveNews();renderNews();}
+
+// ===== 每周回顾 =====
+const REVIEW_KEY='kaoyan-review';
+function weekMonday(d){const m=new Date(d);m.setDate(d.getDate()-weekday(d));return m;}
+function weekKey(d){return 'w'+toKey(weekMonday(d));}
+let reviewStore=loadReview();
+function loadReview(){try{return JSON.parse(localStorage.getItem(REVIEW_KEY)||'{}');}catch(e){return {};}}
+function saveReviewStore(){try{localStorage.setItem(REVIEW_KEY,JSON.stringify(reviewStore));}catch(e){}}
+function renderReview(){
+  const now=new Date(), mon=weekMonday(now);
+  let totalTasks=0,doneTasks=0,completeDays=0,studyMin=0;
+  for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);const k=toKey(d);
+    const t=getTasks(k); if(t){totalTasks+=t.tasks.length;const dn=t.tasks.filter((_,j)=>isDone(k,j)).length;doneTasks+=dn;if(dn===t.tasks.length)completeDays++;}
+    studyMin+=(studyStore[k]||0);
+  }
+  const pct=totalTasks?Math.round(doneTasks/totalTasks*100):0;
+  const el=document.getElementById('reviewSummary');
+  if(el)el.innerHTML='本周打卡 <b>'+completeDays+'/7</b> 天 · 任务完成 <b>'+doneTasks+'/'+totalTasks+'</b> ('+pct+'%) · 学习 <b>'+fmt(studyMin)+'</b>';
+}
+function initReview(){const ta=document.getElementById('reviewText');if(ta)ta.value=reviewStore[weekKey(new Date())]||'';}
+function saveReview(){
+  reviewStore[weekKey(new Date())]=document.getElementById('reviewText').value; saveReviewStore();
+  const s=document.getElementById('reviewSaved'); s.style.display='inline';
+  setTimeout(()=>{s.style.display='none';},1500);
+}
+
+renderAll();
+renderTimer();
+initReview();
+</script>
+
+<div class="wrap" style="margin-top:16px;">
+  <div class="card">
+    <div style="font-weight:700; margin-bottom:6px;">⚙️ 使用说明</div>
+    <div style="font-size:13px; color:#555; line-height:1.7;">
+      ① 手机浏览器打开本文件,点右上角「添加到主屏幕」可像 App 一样使用。<br>
+      ② 每天完成一项就勾选,全部勾完=当日打卡完成。<br>
+      ③ 进度自动存在手机本地,清缓存会丢失,请定期「备份」。<br>
+      ④ 每周日晚上看「连续打卡天数」,断卡会清零,用来督促自己。
+    </div>
+    <div class="row" style="display:flex; gap:8px; margin-top:12px;">
+      <button class="btn-primary" style="flex:1;padding:11px;border:none;border-radius:12px;font-weight:600;" onclick="openBackup()">备份进度</button>
+      <button class="btn-back" style="flex:1;padding:11px;border-radius:12px;font-weight:600;border:1px solid #e5e7eb;" onclick="openRestore()">恢复进度</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
