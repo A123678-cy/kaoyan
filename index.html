@@ -97,6 +97,7 @@
   <h1>考研每日打卡</h1>
   <div class="sub">东南大学 · 085409 生物医学工程(专硕)</div>
   <div class="date-line" id="headDate"></div>
+  <div id="countdown" style="margin-top:5px;font-size:13px;font-weight:600;letter-spacing:.3px;"></div>
 </header>
 
 <div class="wrap">
@@ -109,6 +110,7 @@
       <div class="stat"><div class="num" id="stPct">0%</div><div class="lbl">总进度</div></div>
     </div>
     <div class="bar"><i id="barFill" style="width:0%"></i></div>
+    <div id="targetSummary" style="font-size:12px;color:var(--muted);margin:-6px 0 10px;"></div>
 
     <div class="week" id="weekStrip"></div>
     <div class="weeknav">
@@ -129,6 +131,11 @@
     <div class="card">
       <div style="font-weight:700; margin-bottom:6px;">📚 本章重难点</div>
       <div id="chapterNotes"></div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700; margin-bottom:8px;">🔥 打卡热力图（近12周）</div>
+      <div id="heatmap"></div>
     </div>
   </section>
 
@@ -194,6 +201,21 @@
       <div style="font-weight:700; margin-bottom:6px;">📝 答题模板 & 口诀（点击展开）</div>
       <div id="templates"></div>
     </div>
+
+    <div class="card">
+      <div style="font-weight:700; margin-bottom:8px;">📊 模考成绩</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input type="text" id="mockSubject" placeholder="科目(如数学一)" style="flex:1;padding:8px;border:1px solid var(--line);border-radius:10px;font-size:13px;">
+        <input type="number" id="mockScore" placeholder="分数" min="0" max="150" inputmode="numeric" style="width:80px;padding:8px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:13px;">
+        <button class="btn-primary" style="padding:8px 12px;border:none;border-radius:10px;font-weight:600;" onclick="addMock()">记录</button>
+      </div>
+      <div id="mockList"></div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700; margin-bottom:6px;">📐 公式速查（点击展开）</div>
+      <div id="formulas"></div>
+    </div>
   </section>
 
   <!-- 页5：设置 -->
@@ -217,6 +239,11 @@
         <input type="checkbox" id="autoBackupChk" checked style="width:18px;height:18px;" onchange="toggleAutoBackup(this)">
       </div>
       <div id="backupInfo" style="font-size:12px;color:var(--muted);margin-top:8px;"></div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700; margin-bottom:6px;">🎯 目标分数</div>
+      <div id="targetList"></div>
     </div>
   </section>
 
@@ -1013,14 +1040,14 @@ function addSubject(){
   const n=prompt('输入新学科名称,例如:生理学');
   if(!n)return; const t=n.trim(); if(!t)return;
   if(subjects.indexOf(t)<0){subjects.push(t);saveSubjects();}
-  currentSubject=t; renderSubjects();
+  currentSubject=t; renderSubjects(); renderTargets();
 }
 function removeSubject(name){
   if(!confirm('删除学科「'+name+'」及其时长记录?'))return;
   subjects=subjects.filter(s=>s!==name); delete subjectStore[name];
   if(subjects.length===0)subjects=['数学','英语','政治','专业课'];
   if(currentSubject===name)currentSubject=subjects[0];
-  saveSubjects();saveSubjectStore();renderSubjects();
+  saveSubjects();saveSubjectStore();renderSubjects(); renderTargets();
 }
 function renderSubjects(){
   const b=document.getElementById('subjectBtns'); if(!b)return;
@@ -1126,6 +1153,158 @@ function renderTemplates(){
   el.innerHTML=html;
 }
 
+// ===== 考研倒计时 =====
+const EXAM_DATE='2027-12-25';
+function renderCountdown(){
+  const el=document.getElementById('countdown'); if(!el)return;
+  const today=new Date(); today.setHours(0,0,0,0);
+  const exam=new Date(EXAM_DATE+'T00:00:00');
+  const days=Math.ceil((exam-today)/86400000);
+  el.textContent=days>0?('⏳ 距离初试还有 '+days+' 天'):(days===0?'⏳ 今天就是初试日!':'🎉 初试已结束');
+}
+
+// ===== 目标分数 =====
+const TARGET_KEY='kaoyan-targets';
+let targetStore=loadTargets();
+function loadTargets(){try{return JSON.parse(localStorage.getItem(TARGET_KEY)||'{}');}catch(e){return {};}}
+function saveTargets(){try{localStorage.setItem(TARGET_KEY,JSON.stringify(targetStore));}catch(e){}}
+function setTarget(name,val){
+  const v=parseInt(val,10);
+  if(!isNaN(v)&&v>=0&&v<=150)targetStore[name]=v; else delete targetStore[name];
+  saveTargets(); renderTargetSummary();
+}
+function renderTargets(){
+  const el=document.getElementById('targetList'); if(!el)return;
+  let h='';
+  subjects.forEach(s=>{
+    const v=targetStore[s]||'';
+    h+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;">'
+      +'<span style="flex:1;color:#333;">'+s+'</span>'
+      +'<input type="number" min="0" max="150" placeholder="目标分" value="'+v+'" onchange="setTarget(\''+s+'\',this.value)" style="width:84px;padding:7px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:14px;">'
+      +'</div>';
+  });
+  el.innerHTML=h;
+  renderTargetSummary();
+}
+function renderTargetSummary(){
+  const el=document.getElementById('targetSummary'); if(!el)return;
+  const parts=subjects.filter(s=>targetStore[s]).map(s=>s+targetStore[s]+'分');
+  el.textContent=parts.length?('🎯 '+parts.join(' / ')):'';
+}
+
+// ===== 模考成绩 =====
+const MOCK_KEY='kaoyan-mocks';
+let mockStore=loadMocks();
+function loadMocks(){try{const s=JSON.parse(localStorage.getItem(MOCK_KEY));if(Array.isArray(s))return s;}catch(e){}return [];}
+function saveMocks(){try{localStorage.setItem(MOCK_KEY,JSON.stringify(mockStore));}catch(e){}}
+function addMock(){
+  const subj=(document.getElementById('mockSubject').value||'').trim();
+  const score=parseInt(document.getElementById('mockScore').value,10);
+  if(!subj||isNaN(score)){alert('请填写科目和分数');return;}
+  mockStore.push({date:toKey(new Date()), subject:subj, score:score});
+  saveMocks(); document.getElementById('mockSubject').value=''; document.getElementById('mockScore').value=''; renderMocks();
+}
+function delMock(i){mockStore.splice(i,1);saveMocks();renderMocks();}
+function renderMocks(){
+  const el=document.getElementById('mockList'); if(!el)return;
+  const sorted=mockStore.slice().sort((a,b)=>a.date<b.date?-1:1);
+  let h='';
+  sorted.forEach((m,i)=>{
+    h+='<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;border-bottom:1px solid #f0f0f0;">'
+      +'<span style="color:var(--muted);flex:none;">'+m.date+'</span>'
+      +'<span style="flex:1;color:#333;">'+m.subject+'</span>'
+      +'<span style="font-weight:700;color:var(--accent);">'+m.score+'分</span>'
+      +'<span style="cursor:pointer;color:#cbd5e1;flex:none;" onclick="delMock('+i+')">×</span>'
+      +'</div>';
+  });
+  el.innerHTML=h||'<div style="color:var(--muted);font-size:13px;">暂无记录，模考后在这里记分数</div>';
+}
+
+// ===== 公式速查 =====
+const FORMULAS=[
+ {title:'高数·常用公式', items:[
+  '等价无穷小(x→0)：sinx~x、tanx~x、arcsinx~x、arctanx~x、ln(1+x)~x、e^x-1~x、1-cosx~x²/2',
+  '两个重要极限：lim(x→0)sinx/x=1；lim(x→∞)(1+1/x)^x=e',
+  '泰勒展开：e^x=1+x+x²/2!+x³/3!+…；sinx=x-x³/3!+x⁵/5!-…',
+  '常用导数：(xⁿ)′=n·xⁿ⁻¹、(eˣ)′=eˣ、(lnx)′=1/x、(sinx)′=cosx',
+  '常用积分：∫xⁿdx=xⁿ⁺¹/(n+1)+C、∫eˣdx=eˣ+C、∫1/x dx=ln|x|+C',
+  '分部积分：∫u dv=uv-∫v du',
+  '拉格朗日中值定理：f(b)-f(a)=f′(ξ)(b-a)',
+  '洛必达法则：0/0 或 ∞/∞ 型，lim f/g = lim f′/g′',
+ ]},
+ {title:'线代·常用公式', items:[
+  '行列式按行展开：|A|=Σa_ij·A_ij（A_ij 为代数余子式）',
+  '逆矩阵：A⁻¹=A*/|A|（A* 为伴随矩阵）',
+  '克拉默法则：x_i=|A_i|/|A|',
+  '特征值：|λE-A|=0；迹=Σλ_i；|A|=Πλ_i',
+  '二次型：f=x^T·A·x，正交变换化标准型',
+  '秩的性质：r(AB)≤min(r(A),r(B))',
+ ]},
+ {title:'概率·常用公式', items:[
+  '全概率公式：P(B)=ΣP(A_i)·P(B|A_i)',
+  '贝叶斯公式：P(A_i|B)=P(A_i)P(B|A_i)/P(B)',
+  '期望：E(X)=Σx·p 或 ∫x·f(x)dx',
+  '方差：D(X)=E(X²)-[E(X)]²',
+  '二项分布：X~B(n,p)，E=np，D=np(1-p)',
+  '正态标准化：Z=(X-μ)/σ ~ N(0,1)',
+ ]},
+ {title:'信号与系统·常用公式', items:[
+  '傅里叶变换：X(jω)=∫x(t)e^(-jωt)dt',
+  '傅里叶逆变换：x(t)=(1/2π)∫X(jω)e^(jωt)dω',
+  '拉普拉斯变换：X(s)=∫x(t)e^(-st)dt',
+  'Z变换：X(z)=Σx(n)z^(-n)',
+  '采样定理：f_s≥2f_m（奈奎斯特频率）',
+  '卷积：y(t)=x(t)*h(t)=∫x(τ)h(t-τ)dτ',
+ ]},
+ {title:'DSP·常用公式', items:[
+  'DFT：X(k)=Σx(n)W_N^(nk)，W_N=e^(-j2π/N)',
+  'IDFT：x(n)=(1/N)ΣX(k)W_N^(-nk)',
+  '双线性变换：s=(2/T)(1-z⁻¹)/(1+z⁻¹)',
+  'FIR窗函数设计：h(n)=h_d(n)·w(n)',
+  '稳定判据：H(z)极点全在单位圆内；H(s)极点全在左半平面',
+  '线性相位条件：h(n)偶对称或奇对称',
+ ]},
+];
+function toggleFormula(btn){const b=btn.nextElementSibling;b.style.display=b.style.display==='none'?'block':'none';}
+function renderFormulas(){
+  const el=document.getElementById('formulas'); if(!el)return;
+  let html='';
+  FORMULAS.forEach(s=>{
+    html+='<div style="border-bottom:1px solid var(--line);padding:8px 0;">'
+      +'<div style="font-weight:700;font-size:14px;color:#0891b2;cursor:pointer;user-select:none;display:flex;justify-content:space-between;" onclick="toggleFormula(this)">'+s.title+'<span style="color:var(--muted);font-weight:400;font-size:12px;">'+s.items.length+'条</span></div>'
+      +'<div style="display:none;margin-top:6px;">'
+      +s.items.map((it,i)=>'<div style="font-size:13px;color:#333;line-height:1.8;padding:2px 0;"><b style="color:#0891b2;">'+(i+1)+'.</b> '+it+'</div>').join('')
+      +'</div></div>';
+  });
+  el.innerHTML=html;
+}
+
+// ===== 打卡热力图 =====
+function renderHeatmap(){
+  const el=document.getElementById('heatmap'); if(!el)return;
+  const today=new Date(); today.setHours(0,0,0,0);
+  const planStart=PHASES[0].start;
+  const weeks=12;
+  const start=new Date(today); start.setDate(today.getDate()-weekday(today)-(weeks-1)*7);
+  let rows='';
+  for(let d=0;d<7;d++){
+    let cells='';
+    for(let w=0;w<weeks;w++){
+      const day=new Date(start); day.setDate(start.getDate()+w*7+d);
+      const k=toKey(day);
+      let c='#e5e7eb', future=false;
+      if(day>today){future=true;c='#e5e7eb';}
+      else if(k<planStart){c='transparent';}
+      else if(dayComplete(k)){c='#16a34a';}
+      else if(dayPartial(k)){c='#fbbf24';}
+      cells+='<div style="width:11px;height:11px;background:'+c+';border-radius:2px;'+(future?'opacity:.25;':'')+'"></div>';
+    }
+    rows+='<div style="display:flex;gap:3px;">'+cells+'</div>';
+  }
+  el.innerHTML='<div style="display:flex;flex-direction:column;gap:3px;">'+rows+'</div>'
+    +'<div style="display:flex;gap:10px;font-size:10px;color:var(--muted);margin-top:6px;"><span>🟩 完成</span><span>🟨 部分</span><span>⬜ 未打卡</span></div>';
+}
+
 renderAll();
 renderTimer();
 initReview();
@@ -1134,6 +1313,11 @@ autoBackupCheck();
 renderHighfreq();
 renderTemplates();
 renderSubjects();
+renderCountdown();
+renderTargets();
+renderMocks();
+renderFormulas();
+renderHeatmap();
 </script>
 
 </body>
