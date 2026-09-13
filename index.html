@@ -153,6 +153,12 @@
       </div>
       <div id="studyToday" style="margin-top:10px; font-size:13px; color:#555; text-align:center;">📊 今日 0分钟 ｜ 本周 0分钟</div>
     </div>
+
+    <div class="card">
+      <div style="font-weight:700; margin-bottom:10px;">📚 学科专注</div>
+      <div id="subjectBtns" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      <div id="subjectRings" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;justify-content:center;"></div>
+    </div>
   </section>
 
   <!-- 页3：消息 -->
@@ -182,6 +188,11 @@
     <div class="card">
       <div style="font-weight:700; margin-bottom:6px;">🎯 高频考点（点击展开）</div>
       <div id="highfreq"></div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700; margin-bottom:6px;">📝 答题模板 & 口诀（点击展开）</div>
+      <div id="templates"></div>
     </div>
   </section>
 
@@ -617,14 +628,14 @@ function timerToggle(){
 function tick(){
   const left=endAt-Date.now();
   if(left<=0){clearInterval(id);running=false;
-    if(mode==='focus'){addMinutes(todayKey(),focusMinVal);mode='break';remain=breakMs;}
+    if(mode==='focus'){addMinutes(todayKey(),focusMinVal);addSubjectMinutes(currentSubject,focusMinVal);mode='break';remain=breakMs;}
     else{mode='focus';remain=focusMs;}
     setBtn('开始');renderStudy();renderTimer();return;
   }
   renderTimer();
 }
 function timerReset(){clearInterval(id);running=false;mode='focus';remain=focusMs;setBtn('开始');renderTimer();}
-function addManual(){addMinutes(todayKey(),30);}
+function addManual(){addMinutes(todayKey(),30);addSubjectMinutes(currentSubject,30);}
 
 // ===== 章节重难点 / 知识点 =====
 const MATH_NOTES={
@@ -986,12 +997,123 @@ function renderHighfreq(){
   el.innerHTML=html;
 }
 
+// ===== 学科专注（学科按钮 + 各科时长圆圈）=====
+const SUBJECT_KEY='kaoyan-subjects';
+const SUBJECT_STORE_KEY='kaoyan-subjectStore';
+let subjects=loadSubjects();
+let subjectStore=loadSubjectStore();
+let currentSubject=(subjects&&subjects.length)?subjects[0]:'数学';
+function loadSubjects(){try{const s=JSON.parse(localStorage.getItem(SUBJECT_KEY));if(Array.isArray(s)&&s.length)return s;}catch(e){}return ['数学','英语','政治','专业课'];}
+function loadSubjectStore(){try{return JSON.parse(localStorage.getItem(SUBJECT_STORE_KEY)||'{}');}catch(e){return {};}}
+function saveSubjects(){try{localStorage.setItem(SUBJECT_KEY,JSON.stringify(subjects));}catch(e){}}
+function saveSubjectStore(){try{localStorage.setItem(SUBJECT_STORE_KEY,JSON.stringify(subjectStore));}catch(e){}}
+function addSubjectMinutes(name,min){if(!name)return;subjectStore[name]=(subjectStore[name]||0)+min;saveSubjectStore();renderSubjectRings();}
+function setSubject(name){currentSubject=name;renderSubjects();}
+function addSubject(){
+  const n=prompt('输入新学科名称,例如:生理学');
+  if(!n)return; const t=n.trim(); if(!t)return;
+  if(subjects.indexOf(t)<0){subjects.push(t);saveSubjects();}
+  currentSubject=t; renderSubjects();
+}
+function removeSubject(name){
+  if(!confirm('删除学科「'+name+'」及其时长记录?'))return;
+  subjects=subjects.filter(s=>s!==name); delete subjectStore[name];
+  if(subjects.length===0)subjects=['数学','英语','政治','专业课'];
+  if(currentSubject===name)currentSubject=subjects[0];
+  saveSubjects();saveSubjectStore();renderSubjects();
+}
+function renderSubjects(){
+  const b=document.getElementById('subjectBtns'); if(!b)return;
+  let h='';
+  subjects.forEach(s=>{
+    const on=(s===currentSubject);
+    h+='<button style="padding:8px 14px;border-radius:99px;border:1px solid '+(on?'var(--accent)':'var(--line)')+';background:'+(on?'var(--accent)':'#fff')+';color:'+(on?'#fff':'var(--text)')+';font-size:13px;font-weight:600;cursor:pointer;" onclick="setSubject(\''+s+'\')">'+s+'</button>';
+  });
+  h+='<button style="padding:8px 12px;border-radius:99px;border:1px dashed var(--line);background:#fff;color:var(--muted);font-size:13px;cursor:pointer;" onclick="addSubject()">＋学科</button>';
+  b.innerHTML=h;
+  renderSubjectRings();
+}
+function renderSubjectRings(){
+  const el=document.getElementById('subjectRings'); if(!el)return;
+  const vals=subjects.map(s=>subjectStore[s]||0);
+  const max=Math.max(1,...vals);
+  let h='';
+  subjects.forEach(s=>{const m=subjectStore[s]||0;h+=subjectRing(s,m,Math.min(1,m/max));});
+  el.innerHTML=h;
+}
+function subjectRing(name,minutes,frac){
+  const R=32, C=2*Math.PI*R;
+  const hh=Math.floor(minutes/60), mm=minutes%60;
+  const big=(hh>0?hh+'h'+mm+'m':(mm>0?mm+'m':'0'));
+  return '<div style="width:96px;text-align:center;">'
+    +'<div style="position:relative;width:86px;height:86px;margin:0 auto;">'
+    +'<svg width="86" height="86" viewBox="0 0 86 86">'
+    +'<circle cx="43" cy="43" r="'+R+'" fill="none" stroke="#eef2f7" stroke-width="8"/>'
+    +'<circle cx="43" cy="43" r="'+R+'" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-frac))+'" transform="rotate(-90 43 43)"/>'
+    +'</svg>'
+    +'<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2;">'
+    +'<span style="font-size:12px;color:var(--muted);">'+name+'</span>'
+    +'<span style="font-size:15px;font-weight:800;color:var(--text);">'+big+'</span>'
+    +'</div>'
+    +'<span onclick="removeSubject(\''+name+'\')" style="position:absolute;top:0;right:2px;font-size:14px;color:#cbd5e1;cursor:pointer;">×</span>'
+    +'</div></div>';
+}
+
+// ===== 答题模板 / 口诀 / 必考题型解法 =====
+const TEMPLATES=[
+ {title:'答题模板', items:[
+  '政治·马原大题：①点明原理+原理内容 ②结合材料逐句分析 ③方法论意义/启示',
+  '政治·毛中特/史纲/思修大题：观点表述 + 材料结合 + 总结升华（三句法）',
+  '英语·大作文(图画)三段式：描述图画 → 点明寓意 → 评论+建议',
+  '英语·小作文(书信)：称呼 → 正文(目的+要点) → 落款署名',
+  '数学·中值定理证明：构造辅助函数F(x) → 验证F(a)=F(b) → 由罗尔定理得F′(ξ)=0',
+  '专业课·简答/计算：写定义或公式 → 代入数据 → 结论+单位',
+ ]},
+ {title:'口诀 / 记忆', items:[
+  '分部积分选u：反对幂指三（反三角、对数、幂、指数、三角）',
+  '诱导公式：奇变偶不变，符号看象限',
+  '等价无穷小(x→0)：sinx~x、tanx~x、arcsinx~x、ln(1+x)~x、e^x-1~x、1-cosx~x²/2',
+  '线代·特征值：迹=特征值之和，行列式=特征值之积',
+  '矩阵可逆判定：|A|≠0 ⇔ 秩为n ⇔ 特征值全非零',
+  '正态分布3σ原则：μ±σ占68%、μ±2σ占95%、μ±3σ占99.7%',
+  '马原三大规律：对立统一(矛盾)、量变质变、否定之否定',
+  '核心价值观：富强民主文明和谐 / 自由平等公正法治 / 爱国敬业诚信友善',
+ ]},
+ {title:'必考题型 · 一句话解法', items:[
+  '高数·求极限：先等价无穷小代换，再洛必达或泰勒',
+  '高数·不定积分：优先分部(反对幂指三)，再换元',
+  '高数·定积分：对称区间用奇偶性，圆域用极坐标',
+  '高数·多元极值：求偏导→驻点→AC-B²判别',
+  '高数·幂级数求和：逐项求导/积分化为已知级数',
+  '线代·解方程组：增广矩阵初等行变换',
+  '线代·特征值：解|λE-A|=0，再解(A-λE)x=0',
+  '概率·函数分布：分布函数法 F(y)=P(Y≤y)',
+  '概率·参数估计：写似然函数→取对数→求导令零',
+  '信号·稳定性：判断H(s)极点是否全在左半平面',
+ ]},
+];
+function toggleTemplate(btn){const b=btn.nextElementSibling;b.style.display=b.style.display==='none'?'block':'none';}
+function renderTemplates(){
+  const el=document.getElementById('templates'); if(!el)return;
+  let html='';
+  TEMPLATES.forEach(s=>{
+    html+='<div style="border-bottom:1px solid var(--line);padding:8px 0;">'
+      +'<div style="font-weight:700;font-size:14px;color:#16a34a;cursor:pointer;user-select:none;display:flex;justify-content:space-between;" onclick="toggleTemplate(this)">'+s.title+'<span style="color:var(--muted);font-weight:400;font-size:12px;">'+s.items.length+'条</span></div>'
+      +'<div style="display:none;margin-top:6px;">'
+      +s.items.map((it,i)=>'<div style="font-size:13px;color:#333;line-height:1.75;padding:2px 0;"><b style="color:#16a34a;">'+(i+1)+'.</b> '+it+'</div>').join('')
+      +'</div></div>';
+  });
+  el.innerHTML=html;
+}
+
 renderAll();
 renderTimer();
 initReview();
 renderBackupInfo();
 autoBackupCheck();
 renderHighfreq();
+renderTemplates();
+renderSubjects();
 </script>
 
 </body>
